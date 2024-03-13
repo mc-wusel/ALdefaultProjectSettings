@@ -21,6 +21,9 @@
     "type": "git",
     "url": "https://github.com/mc-wusel/ALdefaultProjectSettings"
   },
+  "bugs": {
+    "url": "https://github.com/mc-wusel/ALdefaultProjectSettings/issues"
+  },
   "homepage": "",
   "preview": false,
   "categories": [
