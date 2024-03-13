@@ -5,7 +5,7 @@ import * as path from 'path';
 export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('mc.go', async () => {
 		if (vscode.workspace.workspaceFolders) {
-			const filename = 'setting.json';
+			const filename = 'settings.json';
 			const dirName = '.vscode';
 			const directory = vscode.workspace.workspaceFolders[0];
 			const settingsDirectory = path.join(directory.uri.fsPath, dirName);
