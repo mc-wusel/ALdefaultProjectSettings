@@ -22,4 +22,4 @@ jobs:
           node-version: 18.x
       - run: npm install
       - run: npm run vscode:prepublish
-      - run: npm run tslint
+      - run: npm run lint
