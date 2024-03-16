@@ -1,9 +1,10 @@
 # Change Log
 
-All notable changes to the "mc" extension will be documented in this file.
+## [0.1.3]
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+- Added cew command - MC: Explorer Right
+- Added new command - MC: Explorer Left
 
-## [Unreleased]
+## [0.1.2]
 
 - Initial release
