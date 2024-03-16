@@ -2,15 +2,24 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import * as settingsMgt from './settingsMgt';
+
+const filename = 'settings.json';
+const dirName = '.vscode';
+
+function registerCMD(context: vscode.ExtensionContext, cmdName: string, callback: (...arg: any[]) => any){
+	let disposable = vscode.commands.registerCommand(cmdName, callback);
+	context.subscriptions.push(disposable);
+}
+
+
 export function activate(context: vscode.ExtensionContext) {
-	let disposable = vscode.commands.registerCommand('mc.go', async () => {
+	registerCMD(context, 'mc.go', async () => {
 		if (vscode.workspace.workspaceFolders) {
-			const filename = 'settings.json';
-			const dirName = '.vscode';
+
 			const directory = vscode.workspace.workspaceFolders[0];
 			const settingsDirectory = path.join(directory.uri.fsPath, dirName);
 			const settingsPath = path.join(settingsDirectory, filename);
-
 			try {
 				// directory does not exist 
 				if (!fs.existsSync(settingsDirectory)) {
@@ -127,7 +136,43 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	});
-	context.subscriptions.push(disposable);
+
+	registerCMD(context,'mc.right', async () => {
+		const property = 'workbench.sideBar.location';
+		const value = 'right';
+
+		if (settingsMgt.settingsFileExists()) {
+			// check the property
+			if (settingsMgt.propertyExists(property)){
+				// modify
+				settingsMgt.setProperty(property, value);
+			} else {
+				// add property
+				settingsMgt.setProperty(property, value);
+			}
+		} else {
+			vscode.window.showErrorMessage(filename + ' is missing.');
+		}
+	});
+
+	registerCMD(context,'mc.left', async () => {
+		const property = 'workbench.sideBar.location';
+		const value = 'left';
+
+		if (settingsMgt.settingsFileExists()) {
+			// check the property
+			if (settingsMgt.propertyExists(property)){
+				// modify
+				settingsMgt.setProperty(property, value);
+			} else {
+				// add property
+				settingsMgt.setProperty(property, value);
+			}
+		} else {
+			vscode.window.showErrorMessage(filename + ' is missing.');
+		}
+	});
+
 }
 
 export function deactivate() { }
