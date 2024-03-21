@@ -5,7 +5,10 @@ import * as path from 'path';
 const filename = 'settings.json';
 const dirName = '.vscode';
 
-
+/**
+ * Toggles the ${AppSourceCop} in al.codeAnalyzers
+ * @returns void
+ */
 export function ToggleAppSourceCop(): void {
   if (vscode.workspace.workspaceFolders) {
     const directory = vscode.workspace.workspaceFolders[0];
