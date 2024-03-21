@@ -26,6 +26,15 @@ async function handleSidebarLocation(context: vscode.ExtensionContext, location:
 	}
 }
 
+async function toggleAppSourceCop() {
+	if (settingsMgt.settingsFileExists()) {
+		const property = 'al.codeAnalyzers';
+		if (settingsMgt.propertyExists(property)) {
+			settingsMgt.ToggleAppSourceCop();
+		}
+	}
+}
+
 function registerCMD(context: vscode.ExtensionContext, cmdName: string, callback: (...arg: any[]) => any) {
 	let disposable = vscode.commands.registerCommand(cmdName, callback);
 	context.subscriptions.push(disposable);
@@ -160,6 +169,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	registerCMD(context, 'mc.right', async () => handleSidebarLocation(context, 'right'));
 	registerCMD(context, 'mc.left', async () => handleSidebarLocation(context, 'left'));
+	registerCMD(context, 'mc.toggleAppSourceCop', async () => toggleAppSourceCop());
 }
 
 export function deactivate() { }

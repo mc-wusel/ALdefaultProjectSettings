@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.4]
+
+- Added new command - MC: Toggle AppSourceCop
+
 ## [0.1.3]
 
 - Added new command - MC: Explorer Right
