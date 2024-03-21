@@ -3,15 +3,33 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as settingsMgt from './settingsMgt';
+import { register } from 'module';
 
 const filename = 'settings.json';
 const dirName = '.vscode';
 
-function registerCMD(context: vscode.ExtensionContext, cmdName: string, callback: (...arg: any[]) => any){
+async function handleSidebarLocation(context: vscode.ExtensionContext, location: string) {
+	const property = 'workbench.sideBar.location';
+	const value = location;
+
+	if (settingsMgt.settingsFileExists()) {
+		// check the property
+		if (settingsMgt.propertyExists(property)) {
+			// modify
+			settingsMgt.setProperty(property, value);
+		} else {
+			// add property
+			settingsMgt.setProperty(property, value);
+		}
+	} else {
+		vscode.window.showErrorMessage(filename + ' is missing.');
+	}
+}
+
+function registerCMD(context: vscode.ExtensionContext, cmdName: string, callback: (...arg: any[]) => any) {
 	let disposable = vscode.commands.registerCommand(cmdName, callback);
 	context.subscriptions.push(disposable);
 }
-
 
 export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.go', async () => {
@@ -21,19 +39,23 @@ export function activate(context: vscode.ExtensionContext) {
 			const settingsDirectory = path.join(directory.uri.fsPath, dirName);
 			const settingsPath = path.join(settingsDirectory, filename);
 			try {
-				// directory does not exist 
-				if (!fs.existsSync(settingsDirectory)) {
-					fs.mkdirSync(settingsDirectory);
-				}
-
 				let alPrefix: string | undefined;
 
 				while (alPrefix === undefined || alPrefix === '') {
 					alPrefix = await vscode.window.showInputBox({
 						prompt: 'Please enter the prefix for your AL project.'
 					});
+
+					if (alPrefix === undefined) {
+						vscode.window.showInformationMessage(filename + ' was not created');
+						return;
+					}
 				}
 
+				// directory does not exist 
+				if (!fs.existsSync(settingsDirectory)) {
+					fs.mkdirSync(settingsDirectory);
+				}
 				const settings = {
 					'search.exclude': {
 						'**/.alcache': true,
@@ -44,7 +66,6 @@ export function activate(context: vscode.ExtensionContext) {
 					'files.autoSave': 'afterDelay',
 					'files.autoSaveDelay': 10000,
 					'window.autoDetectColorScheme': false,
-					'workbench.sideBar.location': 'right',
 					'workbench.statusBar.visible': true,
 					'workbench.editor.showTabs': 'multiple',
 					'workbench.editor.tabSizing': 'shrink',
@@ -53,6 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
 					'workbench.startupEditor': 'newUntitledFile',
 					'workbench.editor.enablePreview': true,
 					'workbench.settings.editor': 'json',
+					'workbench.sideBar.location': 'left',
 					'breadcrumbs.enabled': true,
 					'explorer.compactFolders': false,
 					'explorer.autoReveal': true,
@@ -136,43 +158,8 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	});
-
-	registerCMD(context,'mc.right', async () => {
-		const property = 'workbench.sideBar.location';
-		const value = 'right';
-
-		if (settingsMgt.settingsFileExists()) {
-			// check the property
-			if (settingsMgt.propertyExists(property)){
-				// modify
-				settingsMgt.setProperty(property, value);
-			} else {
-				// add property
-				settingsMgt.setProperty(property, value);
-			}
-		} else {
-			vscode.window.showErrorMessage(filename + ' is missing.');
-		}
-	});
-
-	registerCMD(context,'mc.left', async () => {
-		const property = 'workbench.sideBar.location';
-		const value = 'left';
-
-		if (settingsMgt.settingsFileExists()) {
-			// check the property
-			if (settingsMgt.propertyExists(property)){
-				// modify
-				settingsMgt.setProperty(property, value);
-			} else {
-				// add property
-				settingsMgt.setProperty(property, value);
-			}
-		} else {
-			vscode.window.showErrorMessage(filename + ' is missing.');
-		}
-	});
-
+	registerCMD(context, 'mc.right', async () => handleSidebarLocation(context, 'right'));
+	registerCMD(context, 'mc.left', async () => handleSidebarLocation(context, 'left'));
 }
 
 export function deactivate() { }
