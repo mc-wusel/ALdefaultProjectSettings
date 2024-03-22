@@ -9,6 +9,8 @@
 - enter MC: Go!
 - settings.json will be created
 
+![Command-1](Assets/Graphics/Gif/ALdefaultProjectSettings_1.gif)
+
 ## Commands
 
 - `MC: Go! - create a new settings.json `
