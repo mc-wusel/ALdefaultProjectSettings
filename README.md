@@ -9,7 +9,7 @@
 - enter MC: Go!
 - settings.json will be created
 
-![Command-1](Assets/Graphics/Gif/ALdefaultProjectSettings_1.gif)
+![Command-1](https://github.com/mc-wusel/ALdefaultProjectSettings/blob/main/Assets/Graphics/Gif/ALdefaultProjectSettings_1.gif)
 
 ## Commands
 ## 📕Commands
