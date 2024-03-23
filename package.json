@@ -16,7 +16,7 @@
     "color": "#0060A0",
     "theme": "dark"
   },
-  "icon": "./Assets/Graphics/JPG/pittbull.jpg",
+  "icon": "Assets/Graphics/JPG/pittbull.jpg",
   "repository": {
     "type": "git",
     "url": "https://github.com/mc-wusel/ALdefaultProjectSettings"
