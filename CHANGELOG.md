@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.5]
+
+- Added AppSourceCop functions
+- structure tidied up
+
 ## [0.1.4]
 
 - Added new command - MC: Toggle AppSourceCop
