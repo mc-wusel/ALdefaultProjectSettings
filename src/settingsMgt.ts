@@ -55,7 +55,9 @@ export function deleteAppSourceCop(): void {
       const settingsDirectory = path.join(directory.uri.fsPath, '');
 			const settingsPath = path.join(settingsDirectory, AppSourceCop);
       // file delete
-      fs.unlinkSync(settingsPath);
+      if(fs.existsSync(settingsPath)) {
+        fs.unlinkSync(settingsPath);
+      }
   } catch (err) {
 	  vscode.window.showErrorMessage('Error deleting file ' + AppSourceCop);
 	}
