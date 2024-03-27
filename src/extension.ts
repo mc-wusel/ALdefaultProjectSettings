@@ -6,9 +6,13 @@ import * as settingsMgt from './settingsMgt';
 import { register } from 'module';
 
 const settingsFileName = 'settings.json';
-const appSourceCopFileName = 'AppSourceCop.json';
 const dirName = '.vscode';
 
+/**
+ * 
+ * @param context 
+ * @param location 
+ */
 async function handleSidebarLocation(context: vscode.ExtensionContext, location: string) {
 	const property = 'workbench.sideBar.location';
 	const value = location;
@@ -27,12 +31,17 @@ async function handleSidebarLocation(context: vscode.ExtensionContext, location:
 	}
 }
 
+/**
+ * 
+ */
 async function toggleAppSourceCop() {
 	if (settingsMgt.settingsFileExists()) {
 		const property = 'al.codeAnalyzers';
 		if (settingsMgt.propertyExists(property)) {
 			settingsMgt.ToggleAppSourceCop();
 		}
+	} else {
+		vscode.window.showErrorMessage('Error: settings.json is missing.');
 	}
 }
 
@@ -151,16 +160,20 @@ export function activate(context: vscode.ExtensionContext) {
 							if (selection === 'Yes') {
 								// create file
 								fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
+								// init appSourceCop
+								settingsMgt.initAppSourceCop(alPrefix || '');
 							}
 						});
 				} else {
 					fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
-				}
-				// check the file
-				if (fs.existsSync(settingsPath)) {
-					vscode.window.showInformationMessage(settingsFileName + ' has been created.');
-				} else {
-					vscode.window.showErrorMessage('Error: ' + settingsFileName + ' could not be created.');
+					// init appSourceCop
+					settingsMgt.initAppSourceCop(alPrefix);
+
+					if (fs.existsSync(settingsPath)) {
+						vscode.window.showInformationMessage(settingsFileName + ' has been created.');
+					} else {
+						vscode.window.showErrorMessage('Error: ' + settingsFileName + ' could not be created.');
+					}
 				}
 			}
 			catch (err) {
