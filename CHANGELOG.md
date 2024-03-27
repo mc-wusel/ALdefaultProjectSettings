@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.8]
+
+- Adjustments to the Toggle AppSourceCop command
+
 ## [0.1.7]
 
 - bug fix at Toggle AppSourceCop

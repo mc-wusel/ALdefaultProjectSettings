@@ -5,40 +5,44 @@ import * as path from 'path';
 const filename = 'settings.json';
 const dirName = '.vscode';
 
+async function readSettings(directory: vscode.WorkspaceFolder): Promise<any> {
+  const settingsDirectory = path.join(directory.uri.fsPath, dirName);
+  const settingsPath = path.join(settingsDirectory, filename);
+  const data = await fs.promises.readFile(settingsPath, 'utf-8');
+  return JSON.parse(data);
+}
+
+/**
+ * write the settings into settings.json
+ * @param directory 
+ * @param settings 
+ */
+async function writeSettings(directory: vscode.WorkspaceFolder, settings: any): Promise<void> {
+  const settingsDirectory = path.join(directory.uri.fsPath, dirName);
+  const settingsPath = path.join(settingsDirectory, filename);
+  await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+}
+
 /**
  * Toggles the ${AppSourceCop} in al.codeAnalyzers
  * @returns void
  */
-export function ToggleAppSourceCop(): void {
+export async function ToggleAppSourceCop(): Promise<void> {
   if (vscode.workspace.workspaceFolders) {
     const directory = vscode.workspace.workspaceFolders[0];
-    const settingsDirectory = path.join(directory.uri.fsPath, dirName);
-    const settingsPath = path.join(settingsDirectory, filename);
-   
-    try {
-      // read the file
-      const data = fs.readFileSync(settingsPath, 'utf-8');
-      const settings = JSON.parse(data);
-      const analyzers = settings['al.codeAnalyzers'];
-   
-      if (Array.isArray(analyzers)) {
-        const index = analyzers.indexOf('${AppSourceCop}');
-   
-        if (index !== -1) {
-          analyzers.splice(index, 1);
-          deleteAppSourceCop();
-        } else {
-          analyzers.push('${AppSourceCop}');
-
-          // Add AppSourceCodeCop  file
-          initAppSourceCop(getPropertyValue('CRS.ObjectNamePrefix'));
-        }
-        settings['al.codeAnalyzers'] = analyzers;
-   
-        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    let settings = await readSettings(directory);
+    const analyzers = settings['al.codeAnalyzers'];
+    if (Array.isArray(analyzers)) {
+      const index = analyzers.indexOf('${AppSourceCop}');
+      if (index !== -1) {
+        analyzers.splice(index, 1);
+        deleteAppSourceCop();
+      } else {
+        analyzers.push('${AppSourceCop}');
+        initAppSourceCop(getPropertyValue('CRS.ObjectNamePrefix'));
       }
-    } catch (error) {
-      vscode.window.showErrorMessage(`Error read ${filename}`);
+      settings['al.codeAnalyzers'] = analyzers;
+      await writeSettings(directory, settings);
     }
   }
 }
@@ -47,21 +51,21 @@ export function ToggleAppSourceCop(): void {
  * Delete AppSourceCop.json from root directory
  */
 export function deleteAppSourceCop(): void {
- if (vscode.workspace.workspaceFolders) {
-  const AppSourceCop = 'AppSourceCop.json';
+  if (vscode.workspace.workspaceFolders) {
+    const AppSourceCop = 'AppSourceCop.json';
 
-  try {
-			const directory = vscode.workspace.workspaceFolders[0];
+    try {
+      const directory = vscode.workspace.workspaceFolders[0];
       const settingsDirectory = path.join(directory.uri.fsPath, '');
-			const settingsPath = path.join(settingsDirectory, AppSourceCop);
+      const settingsPath = path.join(settingsDirectory, AppSourceCop);
       // file delete
-      if(fs.existsSync(settingsPath)) {
+      if (fs.existsSync(settingsPath)) {
         fs.unlinkSync(settingsPath);
       }
-  } catch (err) {
-	  vscode.window.showErrorMessage('Error deleting file ' + AppSourceCop);
-	}
- }
+    } catch (err) {
+      vscode.window.showErrorMessage('Error deleting file ' + AppSourceCop);
+    }
+  }
 }
 
 /**
@@ -69,37 +73,37 @@ export function deleteAppSourceCop(): void {
  * @returns void
  */
 export function initAppSourceCop(appPrefix: string): void {
- if (vscode.workspace.workspaceFolders) {
-  try {
-      const AppSourceCop = 'AppSourceCop.json';
-			const directory = vscode.workspace.workspaceFolders[0];
+  if (vscode.workspace.workspaceFolders) {
+    try {
+      const appSourceCopFileName = 'AppSourceCop.json';
+      const directory = vscode.workspace.workspaceFolders[0];
       const settingsDirectory = path.join(directory.uri.fsPath, '');
-			const settingsPath = path.join(settingsDirectory, AppSourceCop);
-      const settings = {'mandatoryAffixes': [appPrefix]};
+      const settingsPath = path.join(settingsDirectory, appSourceCopFileName);
+      const settings = { 'mandatoryAffixes': [appPrefix] };
 
-    // check whether the file already exists
-		if (fs.existsSync(settingsPath)) {
-			vscode.window.showWarningMessage(AppSourceCop + ' already exists! Should this file be overwritten?', 'Yes', 'No')
-      .then(async selection => {
-			  
-        if (selection === 'Yes') {
-				  // create file
-					fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
-				}
-		  });
-		} else {
-		  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
+      // check whether the file already exists
+      if (fs.existsSync(settingsPath)) {
+        vscode.window.showWarningMessage(appSourceCopFileName + ' already exists! Should this file be overwritten?', 'Yes', 'No')
+          .then(async selection => {
+
+            if (selection === 'Yes') {
+              // create file
+              fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
+            }
+          });
+      } else {
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
+        // check the file
+        if (fs.existsSync(settingsPath)) {
+          vscode.window.showInformationMessage(appSourceCopFileName + ' has been created.');
+        } else {
+          vscode.window.showErrorMessage('Error: ' + appSourceCopFileName + ' could not be created.');
+        }
+      }
+    } catch (err) {
+      vscode.window.showErrorMessage('Error creating the file.');
     }
-		// check the file
-		if (fs.existsSync(settingsPath)) {
-		  vscode.window.showInformationMessage(AppSourceCop + ' has been created.');
-		} else {
-		  vscode.window.showErrorMessage('Error: ' + AppSourceCop + ' could not be created.');
-		}
-  } catch (err) {
-	  vscode.window.showErrorMessage('Error creating the file.');
-	}
- }
+  }
 }
 
 /**
@@ -147,7 +151,7 @@ export function propertyExists(property: string): boolean {
       // read the file
       const data = fs.readFileSync(settingsPath, 'utf-8');
       const settings = JSON.parse(data);
-      
+
       // search property
       if (settings.hasOwnProperty(property)) {
         result = true;
@@ -173,7 +177,7 @@ export function setProperty(property: string, value: any): void {
     const directory = vscode.workspace.workspaceFolders[0];
     const settingsDirectory = path.join(directory.uri.fsPath, dirName);
     const settingsPath = path.join(settingsDirectory, filename);
-   
+
     try {
       // read the file
       const data = fs.readFileSync(settingsPath, 'utf-8');
@@ -192,20 +196,20 @@ export function setProperty(property: string, value: any): void {
  * @param property
  * @returns string 
  */
-export function getPropertyValue(property: string): string  {
+export function getPropertyValue(property: string): string {
   let value = undefined;
- 
+
   if (vscode.workspace.workspaceFolders) {
     const directory = vscode.workspace.workspaceFolders[0];
     const settingsDirectory = path.join(directory.uri.fsPath, dirName);
     const settingsPath = path.join(settingsDirectory, filename);
-   
+
     try {
       // read the file
       const data = fs.readFileSync(settingsPath, 'utf-8');
-      const settings = JSON.parse(data); 
-      
-      if( settings.hasOwnProperty(property)){
+      const settings = JSON.parse(data);
+
+      if (settings.hasOwnProperty(property)) {
         value = settings[property];
       }
     } catch (error) {
