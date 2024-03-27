@@ -5,7 +5,8 @@ import * as path from 'path';
 import * as settingsMgt from './settingsMgt';
 import { register } from 'module';
 
-const filename = 'settings.json';
+const settingsFileName = 'settings.json';
+const appSourceCopFileName = 'AppSourceCop.json';
 const dirName = '.vscode';
 
 async function handleSidebarLocation(context: vscode.ExtensionContext, location: string) {
@@ -22,7 +23,7 @@ async function handleSidebarLocation(context: vscode.ExtensionContext, location:
 			settingsMgt.setProperty(property, value);
 		}
 	} else {
-		vscode.window.showErrorMessage(filename + ' is missing.');
+		vscode.window.showErrorMessage(settingsFileName + ' is missing.');
 	}
 }
 
@@ -46,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			const directory = vscode.workspace.workspaceFolders[0];
 			const settingsDirectory = path.join(directory.uri.fsPath, dirName);
-			const settingsPath = path.join(settingsDirectory, filename);
+			const settingsPath = path.join(settingsDirectory, settingsFileName);
 			try {
 				let alPrefix: string | undefined;
 
@@ -56,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 					});
 
 					if (alPrefix === undefined) {
-						vscode.window.showInformationMessage(filename + ' was not created');
+						vscode.window.showInformationMessage(settingsFileName + ' was not created');
 						return;
 					}
 				}
@@ -145,7 +146,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				// check whether the file already exists
 				if (fs.existsSync(settingsPath)) {
-					vscode.window.showWarningMessage(filename + ' already exists! Should this file be overwritten?', 'Yes', 'No')
+					vscode.window.showWarningMessage(settingsFileName + ' already exists! Should this file be overwritten?', 'Yes', 'No')
 						.then(async selection => {
 							if (selection === 'Yes') {
 								// create file
@@ -157,9 +158,9 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				// check the file
 				if (fs.existsSync(settingsPath)) {
-					vscode.window.showInformationMessage(filename + ' has been created.');
+					vscode.window.showInformationMessage(settingsFileName + ' has been created.');
 				} else {
-					vscode.window.showErrorMessage('Error: ' + filename + ' could not be created.');
+					vscode.window.showErrorMessage('Error: ' + settingsFileName + ' could not be created.');
 				}
 			}
 			catch (err) {
