@@ -57,6 +57,11 @@
         "command": "mc.toggleAppSourceCop",
         "title": "Toggle AppSourceCop",
         "category": "MC"
+      },
+      {
+        "command": "mc.docker",
+        "title": "Check Docker",
+        "category": "MC"
       }
     ]
   },

@@ -3,10 +3,19 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as settingsMgt from './settingsMgt';
-import { register } from 'module';
+import * as dockerMgt from './dockerMgt';
 
 const settingsFileName = 'settings.json';
 const dirName = '.vscode';
+
+async function checkDocker() {
+	if (dockerMgt.isDockerInstalled()) {
+		vscode.window.showInformationMessage('Docker is installed.');
+	} else {
+		vscode.window.showErrorMessage('Docker is not installed.');
+	}
+}
+
 
 /**
  * 
@@ -174,6 +183,18 @@ export function activate(context: vscode.ExtensionContext) {
 					} else {
 						vscode.window.showErrorMessage('Error: ' + settingsFileName + ' could not be created.');
 					}
+				}
+
+				// check for docker installation
+				if (dockerMgt.isDockerInstalled()) {
+					vscode.window.showInformationMessage('Docker is installed.');
+				} else {
+					vscode.window.showErrorMessage('Docker is not installed. Do you want to install Docker?', 'Yes', 'No')
+						.then(async selection => {
+							if (selection === 'Yes') {
+								vscode.env.openExternal(vscode.Uri.parse('https://docs.docker.com/engine/install/'));
+							}
+						});
 				}
 			}
 			catch (err) {
