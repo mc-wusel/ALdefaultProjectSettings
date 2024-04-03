@@ -57,6 +57,11 @@
         "command": "mc.toggleAppSourceCop",
         "title": "Toggle AppSourceCop",
         "category": "MC"
+      },
+      {
+        "command": "mc.docker",
+        "title": "Docker",
+        "category": "MC"
       }
     ]
   },
@@ -71,6 +76,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
+    "@types/unzipper": "^0.10.9",
     "@types/vscode": "^1.87.0",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
@@ -79,5 +85,8 @@
     "eslint": "^8.56.0",
     "ts-mockito": "^2.6.1",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "unzipper": "^0.10.14"
   }
 }
