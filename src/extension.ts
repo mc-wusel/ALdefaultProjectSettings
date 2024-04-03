@@ -3,8 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as settingsMgt from './settingsMgt';
-import { register } from 'module';
-
+import * as bcHelper from './bcContainerHelperMgt';
 const settingsFileName = 'settings.json';
 const dirName = '.vscode';
 
@@ -184,6 +183,7 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.right', async () => handleSidebarLocation(context, 'right'));
 	registerCMD(context, 'mc.left', async () => handleSidebarLocation(context, 'left'));
 	registerCMD(context, 'mc.toggleAppSourceCop', async () => toggleAppSourceCop());
+	registerCMD(context, 'mc.installBChelper', async () => bcHelper.installBcContainerHelper());
 }
 
 export function deactivate() { }

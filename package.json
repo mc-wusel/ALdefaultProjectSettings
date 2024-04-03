@@ -57,6 +57,11 @@
         "command": "mc.toggleAppSourceCop",
         "title": "Toggle AppSourceCop",
         "category": "MC"
+      },
+      {
+        "command": "mc.installBChelper",
+        "title": "Install BChelper",
+        "category": "MC"
       }
     ]
   },
@@ -79,5 +84,8 @@
     "eslint": "^8.56.0",
     "ts-mockito": "^2.6.1",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "node-powershell": "^5.0.1"
   }
 }
