@@ -3,10 +3,27 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as settingsMgt from './settingsMgt';
-import { register } from 'module';
+import * as dockerMgt from './dockerMgt';
 
 const settingsFileName = 'settings.json';
 const dirName = '.vscode';
+
+/**
+ * 
+ */
+async function checkDocker() {
+	if (dockerMgt.isDockerInstalled()) {
+		vscode.window.showInformationMessage('Docker is installed.');
+	} else {
+		vscode.window.showErrorMessage('Docker is not installed. Do you want to install Docker?', 'Yes', 'No')
+		.then(selection => {
+			if (selection === 'Yes') {
+				dockerMgt.installDocker();
+			}
+		});
+	}
+}
+
 
 /**
  * 
@@ -184,6 +201,7 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.right', async () => handleSidebarLocation(context, 'right'));
 	registerCMD(context, 'mc.left', async () => handleSidebarLocation(context, 'left'));
 	registerCMD(context, 'mc.toggleAppSourceCop', async () => toggleAppSourceCop());
+	registerCMD(context,'mc.docker', async () => { checkDocker();});
 }
 
 export function deactivate() { }
