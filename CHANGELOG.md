@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.0]
+
+- Adding the workspace settings
+
 ## [0.1.8]
 
 - Adjustments to the Toggle AppSourceCop command

@@ -19,6 +19,7 @@
 - `MC: Explorer Right - puts the file explorer on the right side`
 - `MC: Explorer Left - puts the file explorer on the left side`
 - `MC: Toggle AppSourceCop - activate or deactivate the AppSourceCop`
+- `MC: Add Workspace Settings - insert settings into workspace file`
 
 ## 🤝 Contributing
 

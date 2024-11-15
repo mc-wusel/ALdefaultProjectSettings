@@ -2,10 +2,10 @@
   "name": "al-default-project-settings",
   "displayName": "ALdefaultProjectSettings",
   "description": "A settings extension for Microsoft Dynamics 365 Business Central development. Generates a standard settings.json for AL projects",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "publisher": "mc-wusel",
   "engines": {
-    "vscode": "^1.87.0"
+    "vscode": "^1.95.3"
   },
   "author": {
     "name": "mc-wusel",
@@ -56,6 +56,11 @@
       {
         "command": "mc.toggleAppSourceCop",
         "title": "Toggle AppSourceCop",
+        "category": "MC"
+      },
+      {
+        "command": "mc.workspace",
+        "title": "Add Workspace Settings",
         "category": "MC"
       }
     ]
