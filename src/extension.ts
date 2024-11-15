@@ -50,6 +50,140 @@ function registerCMD(context: vscode.ExtensionContext, cmdName: string, callback
 	context.subscriptions.push(disposable);
 }
 
+function workspaceFactory() {
+ if (vscode.workspace.workspaceFile) {
+        const workspaceFilePath = vscode.workspace.workspaceFile.fsPath;
+        const workspaceDir = path.dirname(workspaceFilePath);
+
+                fs.readFile(workspaceFilePath, 'utf8', async (err, data) => {
+            if (err) {
+                vscode.window.showErrorMessage(`Error reading the workspace file: ${err.message}`);
+                return;
+            }
+
+            try {
+                const workspaceJson = JSON.parse(data);
+
+								 let alPrefix: string | undefined;
+                while (alPrefix === undefined || alPrefix === '') {
+                    alPrefix = await vscode.window.showInputBox({
+                        prompt: 'Please enter the prefix for your AL project.'
+                    });
+
+                    if (alPrefix === undefined) {
+                        vscode.window.showInformationMessage('Workspace settings were not updated.');
+                        return;
+                    }
+                }
+
+									if (workspaceJson.settings) {
+                		if (workspaceJson.settings) {
+                    	workspaceJson.settings = getDefaultSettings(alPrefix);
+                    	fs.writeFileSync(workspaceFilePath, JSON.stringify(workspaceJson, null, 4));
+                    	vscode.window.showInformationMessage('Settings have been updated in the workspace file.');
+                		} else {
+                    	workspaceJson.settings = getDefaultSettings(alPrefix);
+                    	fs.writeFileSync(workspaceFilePath, JSON.stringify(workspaceJson, null, 4));
+                    	vscode.window.showInformationMessage('Settings have been added to the workspace file.');
+                		}
+                	} else {
+                    workspaceJson.settings = getDefaultSettings(alPrefix);
+
+                    fs.writeFileSync(workspaceFilePath, JSON.stringify(workspaceJson, null, 4));
+                    vscode.window.showInformationMessage('Settings have been added to the workspace file.');
+                	}
+            } catch (parseError) {
+                vscode.window.showErrorMessage('Error parsing the workspace file');
+            }
+        });
+
+        return true;
+    } else {
+        vscode.window.showErrorMessage('Error: No workspace file is currently open. Please open a .code-workspace file.');
+        return false; // Exit
+    }
+ } 
+
+ function getDefaultSettings(alPrefix: string | undefined) {
+    return {
+        'search.exclude': {
+            '**/.alcache': true,
+            '**/rad.json': true,
+            '**/*.code-search': true
+        },
+        'files.trimTrailingWhitespace': false,
+        'files.autoSave': 'afterDelay',
+        'files.autoSaveDelay': 10000,
+        'window.autoDetectColorScheme': false,
+        'workbench.statusBar.visible': true,
+        'workbench.editor.showTabs': 'multiple',
+        'workbench.editor.tabSizing': 'shrink',
+        'workbench.editor.tabActionLocation': 'right',
+        'workbench.editor.wrapTabs': true,
+        'workbench.startupEditor': 'newUntitledFile',
+        'workbench.editor.enablePreview': true,
+        'workbench.settings.editor': 'json',
+        'workbench.sideBar.location': 'left',
+        'breadcrumbs.enabled': true,
+        'explorer.compactFolders': false,
+        'explorer.autoReveal': true,
+        'editor.formatOnSave': true,
+        'editor.suggestSelection': 'first',
+        'editor.snippetSuggestions': 'bottom',
+        'editor.suggest.snippetsPreventQuickSuggestions': false,
+        'editor.tabCompletion': 'on',
+        'editor.wordWrap': 'on',
+        'editor.mouseWheelZoom': true,
+        'editor.minimap.enabled': false,
+        'editor.cursorBlinking': 'phase',
+        'editor.cursorStyle': 'line',
+        'editor.lineHeight': 22,
+        'editor.inlayHints.enabled': 'offUnlessPressed',
+        'extensions.ignoreRecommendations': true,
+        'git.autofetch': true,
+        'git.enableSmartCommit': false,
+        'git.suggestSmartCommit': false,
+        'git.postCommitCommand': 'push',
+        'git.enableStatusBarSync': false,
+        'git.pruneOnFetch': true,
+        'al.browser': 'Edge',
+        'al.enableCodeActions': true,
+        'al.enableCodeAnalysis': true,
+        'al.incrementalBuild': true,
+        'al.backgroundCodeAnalysis': 'Project',
+        'al.packageCachePath': '.alpackages',
+        'al.compilationOptions': {
+            'generateReportLayout': true
+        },
+        'al.assemblyProbingPaths': [
+            '.netpackages'
+        ],
+        'al.codeAnalyzers': [
+            '${AppSourceCop}',
+            '${CodeCop}',
+            '${UICop}'
+        ],
+        'al.inlayhints.functionReturnTypes.enabled': true,
+        'al.inlayhints.parameterNames.enabled': true,
+        'al-test-runner.sendDebugTelemetry': false,
+        'CRS.FileNamePattern': '<ObjectNameShort>.<ObjectTypeShortPascalCase>.al',
+        'CRS.FileNamePatternExtensions': '<ObjectNameShort>.<ObjectTypeShortPascalCase>.al',
+        'CRS.FileNamePatternPageCustomizations': '<ObjectNameShort>.<ObjectTypeShortPascalCase>.al',
+        'CRS.ObjectNamePrefix': alPrefix || 'MyPrefix', 
+        'CRS.RenameWithGit': false,
+        'CRS.DependencyGraph.ExcludePublishers': [
+            'Microsoft'
+        ],
+        '[al]': {
+            'editor.wordBasedSuggestions': 'off',
+            'editor.suggestSelection': 'first',
+            'editor.formatOnSave': true,
+            'editor.semanticHighlighting.enabled': false
+        },
+        'notebook.breadcrumbs.showCodeCells': true
+    };
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.go', async () => {
 		if (vscode.workspace.workspaceFolders) {
@@ -75,83 +209,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if (!fs.existsSync(settingsDirectory)) {
 					fs.mkdirSync(settingsDirectory);
 				}
-				const settings = {
-					'search.exclude': {
-						'**/.alcache': true,
-						'**/rad.json': true,
-						'**/*.code-search': true
-					},
-					'files.trimTrailingWhitespace': false,
-					'files.autoSave': 'afterDelay',
-					'files.autoSaveDelay': 10000,
-					'window.autoDetectColorScheme': false,
-					'workbench.statusBar.visible': true,
-					'workbench.editor.showTabs': 'multiple',
-					'workbench.editor.tabSizing': 'shrink',
-					'workbench.editor.tabActionLocation': 'right',
-					'workbench.editor.wrapTabs': true,
-					'workbench.startupEditor': 'newUntitledFile',
-					'workbench.editor.enablePreview': true,
-					'workbench.settings.editor': 'json',
-					'workbench.sideBar.location': 'left',
-					'breadcrumbs.enabled': true,
-					'explorer.compactFolders': false,
-					'explorer.autoReveal': true,
-					'editor.formatOnSave': true,
-					'editor.suggestSelection': 'first',
-					'editor.snippetSuggestions': 'bottom',
-					'editor.suggest.snippetsPreventQuickSuggestions': false,
-					'editor.tabCompletion': 'on',
-					'editor.wordWrap': 'on',
-					'editor.mouseWheelZoom': true,
-					'editor.minimap.enabled': false,
-					'editor.cursorBlinking': 'phase',
-					'editor.cursorStyle': 'line',
-					'editor.lineHeight': 22,
-					'editor.inlayHints.enabled': 'offUnlessPressed',
-					'extensions.ignoreRecommendations': true,
-					'git.autofetch': true,
-					'git.enableSmartCommit': false,
-					'git.suggestSmartCommit': false,
-					'git.postCommitCommand': 'push',
-					'git.enableStatusBarSync': false,
-					'git.pruneOnFetch': true,
-					'al.browser': 'Edge',
-					'al.enableCodeActions': true,
-					'al.enableCodeAnalysis': true,
-					'al.incrementalBuild': true,
-					'al.backgroundCodeAnalysis': 'Project',
-					'al.packageCachePath': '.alpackages',
-					'al.compilationOptions': {
-						'generateReportLayout': true
-					},
-					'al.assemblyProbingPaths': [
-						'.netpackages'
-					],
-					'al.codeAnalyzers': [
-						'${AppSourceCop}',
-						'${CodeCop}',
-						'${UICop}'
-					],
-					'al.inlayhints.functionReturnTypes.enabled': true,
-					'al.inlayhints.parameterNames.enabled': true,
-					'al-test-runner.sendDebugTelemetry': false,
-					'CRS.FileNamePattern': '<ObjectNameShort>.<ObjectTypeShortPascalCase>.al',
-					'CRS.FileNamePatternExtensions': '<ObjectNameShort>.<ObjectTypeShortPascalCase>.al',
-					'CRS.FileNamePatternPageCustomizations': '<ObjectNameShort>.<ObjectTypeShortPascalCase>.al',
-					'CRS.ObjectNamePrefix': alPrefix + ' ',
-					'CRS.RenameWithGit': false,
-					'CRS.DependencyGraph.ExcludePublishers': [
-						'Microsoft'
-					],
-					'[al]': {
-						'editor.wordBasedSuggestions': 'off',
-						'editor.suggestSelection': 'first',
-						'editor.formatOnSave': true,
-						'editor.semanticHighlighting.enabled': false,
-					},
-					'notebook.breadcrumbs.showCodeCells': true
-				};
+				const settings = getDefaultSettings(alPrefix);
 
 				// check whether the file already exists
 				if (fs.existsSync(settingsPath)) {
@@ -184,6 +242,7 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.right', async () => handleSidebarLocation(context, 'right'));
 	registerCMD(context, 'mc.left', async () => handleSidebarLocation(context, 'left'));
 	registerCMD(context, 'mc.toggleAppSourceCop', async () => toggleAppSourceCop());
+	registerCMD(context, 'mc.workspace', async () => workspaceFactory());
 }
 
 export function deactivate() { }
