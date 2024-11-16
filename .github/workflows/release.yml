@@ -1,27 +1,82 @@
-name: Release Extension
+name: Release Pipeline
+
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch: 
 
 jobs:
-  release:
+  lint_compile_bump_version_and_publish:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install
+
+      - name: Run ESLint
+        run: |
+          npx eslint src --ext ts
 
       - name: Compile TypeScript
-        run: tsc -p ./
-
-      - name: Publish Extension
         run: |
+          npx tsc -p ./
+
+      - name: Read Current Version
+        id: read_version
+        run: |
+          if [ -f VERSION ]; then
+            current_version=$(cat VERSION)
+          else
+            echo "0.0.0" > VERSION
+            current_version="0.0.0"
+          fi
+          echo "Current version: $current_version"
+          echo "current_version=$current_version" >> $GITHUB_ENV
+
+      - name: Bump Minor Version
+        id: bump_version
+        run: |
+          # Aktuelle Version splitten und Minor erhöhen
+          IFS='.' read -r major minor patch <<< "$current_version"
+          minor=$((minor + 1))
+          new_version="$major.$minor.0"
+          echo "New version: $new_version"
+
+          # Neue Version in Datei schreiben
+          echo $new_version > VERSION
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
+      - name: Commit Version Update
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add VERSION
+          git commit -m "Bump version to ${{ env.new_version }}"
+          git push
+
+      - name: Create Git Tag
+        run: |
+          git tag "v${{ env.new_version }}"
+          git push origin "v${{ env.new_version }}"
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: "v${{ env.new_version }}"
+          release_name: "Release v${{ env.new_version }}"
+          draft: false
+          prerelease: false
+
+      - name: Package and Publish Extension
+        env: 
+          VSCE_PAT: ${{ secrets.VSCE_PAT }} 
           npx vsce package
+          npx vsce publish
