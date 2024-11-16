@@ -67,6 +67,11 @@
         "command": "mc.workspace",
         "title": "Add Workspace Settings",
         "category": "MC"
+      },
+      {
+        "command": "mc.addCloudLaunchSettings",
+        "title": "Add Cloud Launch Settings",
+        "category": "MC"
       }
     ]
   },
