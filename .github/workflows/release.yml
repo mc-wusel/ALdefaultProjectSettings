@@ -23,8 +23,5 @@ jobs:
         run: tsc -p ./
 
       - name: Publish Extension
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           npx vsce package
-          npx vsce publish
