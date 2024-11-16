@@ -20,6 +20,7 @@
 - `MC: Explorer Left - puts the file explorer on the left side`
 - `MC: Toggle AppSourceCop - activate or deactivate the AppSourceCop`
 - `MC: Add Workspace Settings - insert settings into workspace file`
+- `MC: Add Cloud Launch Settings - Adds a configuration for the SaaS environment to the launch.json`
 
 ## 🤝 Contributing
 
@@ -28,7 +29,7 @@ Feel free to check [issues page](https://github.com/mc-wusel/ALdefaultProjectSet
 
 Some advice before you start:
 
--Check the issues first. It may be that your idea, bug, or feature has already been mentioned by someone else.
+- Check the issues first. It may be that your idea, bug, or feature has already been mentioned by someone else.
 
 - Create an issue before starting work! This is important. I may already be working on an improvement similar (or equal) to what you planned on working.
 
