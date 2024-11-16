@@ -23,5 +23,15 @@
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!
-Fell free to check [issues page](https://github.com/mc-wusel/ALdefaultProjectSettings/issues)
+Your contributions are welcome. If you want to contribute a feature, bug fix, improvement, or something else, just create a pull request.
+Feel free to check [issues page](https://github.com/mc-wusel/ALdefaultProjectSettings/issues)
+
+Some advice before you start:
+
+-Check the issues first. It may be that your idea, bug, or feature has already been mentioned by someone else.
+
+- Create an issue before starting work! This is important. I may already be working on an improvement similar (or equal) to what you planned on working.
+
+## License
+
+This entire repository is licensed under the MIT License. [See here](LICENSE.md) for more infoarmations.
