@@ -36,27 +36,6 @@ jobs:
           echo "Current version: $current_version"
           echo "current_version=$current_version" >> $GITHUB_ENV
 
-      - name: Bump Minor Version
-        id: bump_version
-        run: |
-          # Aktuelle Version splitten und Minor erhöhen
-          IFS='.' read -r major minor patch <<< "$current_version"
-          minor=$((minor + 1))
-          new_version="$major.$minor.0"
-          echo "New version: $new_version"
-
-          # Neue Version in Datei schreiben
-          echo $new_version > VERSION
-          echo "new_version=$new_version" >> $GITHUB_ENV
-
-      - name: Commit Version Update
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add VERSION
-          git commit -m "Bump version to ${{ env.new_version }}"
-          git push https://x-access-token:${{ secrets.My_GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
-
       - name: Create Git Tag
         run: |
           git tag "v${{ env.new_version }}"
