@@ -32,7 +32,12 @@
     "Other"
   ],
   "keywords": [
-    "al"
+    "al",
+    "AL Extension",
+    "Dynamics 365 Business Central",
+    "Microsoft Dynamics 365 Business Central",
+    "Dynamics NAV",
+    "ERP"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
