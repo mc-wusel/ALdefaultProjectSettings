@@ -5,7 +5,12 @@ import * as path from 'path';
 const filename = 'settings.json';
 const dirName = '.vscode';
 
-async function readSettings(directory: vscode.WorkspaceFolder): Promise<any> {
+interface Settings {
+  'al.codeAnalyzers'?: string[];
+  [key: string]: any;
+}
+
+async function readSettings(directory: vscode.WorkspaceFolder): Promise<Settings> {
   const settingsDirectory = path.join(directory.uri.fsPath, dirName);
   const settingsPath = path.join(settingsDirectory, filename);
   const data = await fs.promises.readFile(settingsPath, 'utf-8');
