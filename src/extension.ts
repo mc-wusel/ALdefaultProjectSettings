@@ -4,8 +4,10 @@ import * as path from 'path';
 
 import * as settingsMgt from './settingsMgt';
 import { register } from 'module';
+import { request } from 'http';
 
 const settingsFileName = 'settings.json';
+const launchFileName = 'launch.json';
 const dirName = '.vscode';
 
 /**
@@ -184,6 +186,77 @@ function workspaceFactory() {
     };
 }
 
+async function addCloudLaunchSettings(){
+    if (vscode.workspace.workspaceFolders) {
+
+			const directory = vscode.workspace.workspaceFolders[0];
+			const settingsDirectory = path.join(directory.uri.fsPath, dirName);
+			const settingsPath = path.join(settingsDirectory, launchFileName);
+			try {
+                let environmentName: string | undefined;
+
+                while (environmentName === undefined || environmentName === '') {
+                    environmentName = await vscode.window.showInputBox({
+                        prompt: 'Please enter the name of the environment.'
+                    });
+
+                    if (environmentName === undefined) {
+                        vscode.window.showInformationMessage( launchFileName + ' is not updated.');
+                        return;
+                    }
+                }
+
+                if (fs.existsSync(settingsPath)) {
+                    
+                    const  fileContent = fs.readFileSync(settingsPath, 'utf8');
+                    const launchJson = JSON.parse(fileContent);
+                    const configurations = launchJson.configurations || [];
+                    
+                    // update the name of the existing configurations
+                    configurations.forEach((config: any, index: number) => {
+                        const existingName = config.name.includes('-')
+                            ? config.name.split('-').slice(1).join('-').trim()
+                            : config.name.trim();
+                        config.name = `${index + 1} - ${existingName}`;
+                    });
+
+                    const configurationCount = configurations.length;
+                    const configEnviromentName = `${configurationCount + 1} - ${environmentName}`;
+                    
+                    const SaaSConfig= {
+                        name: configEnviromentName,
+                        type: 'al',
+                        request: 'launch',
+                        environmentType: 'Sandbox',
+                        environmentName: environmentName,
+                        startupObjectId: 22,
+                        breakOnError: true,
+                        breakOnRecordWrite: 'None',
+                        launchBrowser: true,
+                        enableLongRunningSqlStatements: true,
+                        enableSqlInformationDebugger: true,
+                        numberOfSqlStatements: 10,
+                        dependencyPublishingOption: "Default",
+                        tenant: "default",
+                    };
+                    
+                    // add the new configuration
+                    configurations.push(SaaSConfig);
+                    launchJson.configurations = configurations;
+                    // update the file
+                    fs.writeFileSync(settingsPath, JSON.stringify(launchJson, null, 4));
+
+                    vscode.window.showInformationMessage(`The ${launchFileName} has been successfully updated with the new configuration: ${configEnviromentName}`);
+                } else {
+						vscode.window.showErrorMessage('Error: ' + launchFileName + ' is not found.');
+					}				
+            }
+            catch (err) {
+			vscode.window.showErrorMessage('Error updating the file.');
+			} 
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.go', async () => {
 		if (vscode.workspace.workspaceFolders) {
@@ -243,6 +316,7 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCMD(context, 'mc.left', async () => handleSidebarLocation(context, 'left'));
 	registerCMD(context, 'mc.toggleAppSourceCop', async () => toggleAppSourceCop());
 	registerCMD(context, 'mc.workspace', async () => workspaceFactory());
+    registerCMD(context, 'mc.addCloudLaunchSettings', async () => addCloudLaunchSettings());                
 }
 
 export function deactivate() { }
