@@ -2,10 +2,10 @@
   "compilerOptions": {
     "module": "Node16",
     "target": "ES2022",
-    "outDir": "out",
+    "outDir": "./out",
     "lib": ["ES2022"],
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDir": "./src",
     "strict": true,
     "moduleResolution": "Node16",
     "esModuleInterop": true,   
