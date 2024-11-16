@@ -34,4 +34,4 @@ Some advice before you start:
 
 ## License
 
-This entire repository is licensed under the MIT License. [See here](LICENSE.md) for more infoarmations.
+This entire repository is licensed under the MIT License. [See here](LICENSE) for more infoarmations.
