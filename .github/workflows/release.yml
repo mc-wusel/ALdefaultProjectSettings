@@ -1,14 +1,13 @@
 name: Release Pipeline
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   lint_compile_bump_version_and_publish:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -76,7 +75,8 @@ jobs:
           prerelease: false
 
       - name: Package and Publish Extension
-        env: 
-          VSCE_PAT: ${{ secrets.VSCE_PAT }} 
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
           npx vsce package
           npx vsce publish
