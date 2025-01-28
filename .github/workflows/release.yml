@@ -3,6 +3,9 @@ name: Release Pipeline
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   lint_compile_bump_version_and_publish:
     runs-on: ubuntu-latest
@@ -50,12 +53,14 @@ jobs:
           mv package.tmp.json package.json
 
       - name: Commit Version Bump
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json
           git commit -m "Bump version to ${{ env.new_version }}"
-          git push
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
 
       - name: Create Git Tag
         run: |
