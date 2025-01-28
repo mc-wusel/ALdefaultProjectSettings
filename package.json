@@ -2,7 +2,7 @@
   "name": "al-default-project-settings",
   "displayName": "ALdefaultProjectSettings",
   "description": "A settings extension for Microsoft Dynamics 365 Business Central development. Generates a standard settings.json for AL projects",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "publisher": "mc-wusel",
   "engines": {
     "vscode": "^1.95.3"
