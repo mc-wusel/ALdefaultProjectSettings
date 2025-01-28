@@ -7,13 +7,15 @@ permissions:
   contents: write
 
 jobs:
-  lint_compile_bump_version_and_publish:
+ Release:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Step 2: Setup Node.js and Install Dependencies
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -23,10 +25,12 @@ jobs:
         run: |
           npm install
 
+      # Step 3: Compile TypeScript
       - name: Compile TypeScript
         run: |
           npx tsc -p ./
 
+      # Step 4: Bump Version
       - name: Read Current Version
         id: read_version
         run: |
@@ -52,19 +56,16 @@ jobs:
           jq ".version = \"$new_version\"" package.json > package.tmp.json
           mv package.tmp.json package.json
 
+      # Step 5: Commit Version Bump and Push Changes
       - name: Commit Version Bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json
           git commit -m "Bump version to ${{ env.new_version }}"
-          git push https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
 
-      - name: Create Git Tag
-        run: |
-          git tag "v${{ env.new_version }}"
-          git push origin "v${{ env.new_version }}"
-
+      # Step 6: Create Release
       - name: Create Release
         uses: actions/create-release@v1
         with:
@@ -75,6 +76,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Step 7: Cleanup - Package and Publish Extension
       - name: Package and Publish Extension
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
