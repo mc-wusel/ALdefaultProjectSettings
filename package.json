@@ -9,7 +9,7 @@
   },
   "author": {
     "name": "mc-wusel",
-    "url": "",
+    "url": "https://github.com/mc-wusel",
     "email": ""
   },
   "galleryBanner": {
@@ -23,13 +23,14 @@
   },
   "bugs": {
     "url": "https://github.com/mc-wusel/ALdefaultProjectSettings/issues"
-  },
+  }
   "homepage": "",
   "preview": false,
   "categories": [
     "Programming Languages",
     "Snippets",
-    "Other"
+    "Other",
+    "AL"
   ],
   "keywords": [
     "al",
