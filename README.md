@@ -2,6 +2,11 @@
 
 > A settings extension for Microsoft Dynamics 365 Business Central development. Generates a standard settings.json for AL projects
 
+
+Feel free to support me here:
+
+<a href='https://ko-fi.com/mcwusel' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee' /></a>
+
 ## ✨Start
 
 - open vscode
