@@ -16,7 +16,6 @@ Feel free to support me here:
 
 ![Command-1](Assets/Graphics/Gif/ALdefaultProjectSettings_1.gif)
 
-## Commands
 
 ## 📕Commands
 
