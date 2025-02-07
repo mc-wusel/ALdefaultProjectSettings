@@ -24,7 +24,7 @@ async function createPermissionSet() {
 
         const directory = vscode.workspace.workspaceFolders[0];
         const permissionSetDirectory = path.join(directory.uri.fsPath, 'PermissionSets');
-        const permissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}permissionset.al`);
+        const permissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Admin.permissionset.al`);
         const editPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Edit.permissionset.al`);
         const readPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Read.permissionset.al`);
         const objectsPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Objects.permissionset.al`);
