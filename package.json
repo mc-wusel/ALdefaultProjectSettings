@@ -23,13 +23,13 @@
   },
   "bugs": {
     "url": "https://github.com/mc-wusel/ALdefaultProjectSettings/issues"
-  }
+  },
   "homepage": "",
   "preview": false,
   "categories": [
     "Programming Languages",
     "Snippets",
-    "Other",
+    "Other"
   ],
   "keywords": [
     "AL",
@@ -72,14 +72,20 @@
         "command": "mc.addCloudLaunchSettings",
         "title": "Add Cloud Launch Settings",
         "category": "MC"
+      },
+      {
+        "command": "mc.createPermissionSet",
+        "title": "Create Permission Set",
+        "category": "MC"
       }
     ]
   },
   "scripts": {
+    "watch:esbuild": "esbuild --bundle --sourcemap --outdir=out --watch",
+    "build": "tsc -p . && esbuild --bundle --sourcemap --outdir=out",
     "compile": "npm run check-types && node esbuild.js",
     "check-types": "tsc --noEmit",
     "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "vscode:prepublish": "npm run package",
     "package": "npm run check-types && node esbuild.js --production"
