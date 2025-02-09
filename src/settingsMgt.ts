@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const filename = 'settings.json';
 const dirName = '.vscode';
+const filename = 'settings.json';
 
-async function readSettings(directory: vscode.WorkspaceFolder): Promise<any> {
+async function readSettings(directory: vscode.WorkspaceFolder): Promise<Record<string, unknown>> {
   const settingsDirectory = path.join(directory.uri.fsPath, dirName);
   const settingsPath = path.join(settingsDirectory, filename);
   const data = await fs.promises.readFile(settingsPath, 'utf-8');
@@ -17,7 +17,7 @@ async function readSettings(directory: vscode.WorkspaceFolder): Promise<any> {
  * @param directory 
  * @param settings 
  */
-async function writeSettings(directory: vscode.WorkspaceFolder, settings: any): Promise<void> {
+async function writeSettings(directory: vscode.WorkspaceFolder, settings: Record<string, unknown>): Promise<void> {
   const settingsDirectory = path.join(directory.uri.fsPath, dirName);
   const settingsPath = path.join(settingsDirectory, filename);
   await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2));
@@ -62,7 +62,7 @@ export function deleteAppSourceCop(): void {
       if (fs.existsSync(settingsPath)) {
         fs.unlinkSync(settingsPath);
       }
-    } catch (err) {
+    } catch {
       vscode.window.showErrorMessage('Error deleting file ' + AppSourceCop);
     }
   }
@@ -100,7 +100,7 @@ export function initAppSourceCop(appPrefix: string): void {
           vscode.window.showErrorMessage('Error: ' + appSourceCopFileName + ' could not be created.');
         }
       }
-    } catch (err) {
+    } catch {
       vscode.window.showErrorMessage('Error creating the file.');
     }
   }
@@ -128,7 +128,7 @@ export function settingsFileExists(): boolean {
         result = true;
       }
 
-    } catch (error) {
+    } catch {
       result = false;
     }
   }
@@ -158,7 +158,7 @@ export function propertyExists(property: string): boolean {
       } else {
         result = false;
       }
-    } catch (error) {
+    } catch {
       result = false;
     }
   } else {
@@ -172,7 +172,7 @@ export function propertyExists(property: string): boolean {
  * @param property 
  * @param value 
  */
-export function setProperty(property: string, value: any): void {
+export function setProperty(property: string, value: unknown): void {
   if (vscode.workspace.workspaceFolders) {
     const directory = vscode.workspace.workspaceFolders[0];
     const settingsDirectory = path.join(directory.uri.fsPath, dirName);
@@ -185,7 +185,7 @@ export function setProperty(property: string, value: any): void {
 
       settings[property] = value;
       fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
-    } catch (error) {
+    } catch {
       vscode.window.showErrorMessage(`Error setting property "${property}"`);
     }
   }
@@ -212,7 +212,7 @@ export function getPropertyValue(property: string): string {
       if (settings.hasOwnProperty(property)) {
         value = settings[property];
       }
-    } catch (error) {
+    } catch {
       vscode.window.showErrorMessage(`Error getting property "${property}" value.`);
     }
   }

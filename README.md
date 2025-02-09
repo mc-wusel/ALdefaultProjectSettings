@@ -2,7 +2,6 @@
 
 > A settings extension for Microsoft Dynamics 365 Business Central development. Generates a standard settings.json for AL projects
 
-
 Feel free to support me here:
 
 <a href='https://ko-fi.com/mcwusel' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee' /></a>
@@ -12,10 +11,9 @@ Feel free to support me here:
 - open vscode
 - press F1
 - enter MC: Go!
-- settings.json will be created
+- settings.json will be created 😎
 
 ![Command-1](Assets/Graphics/Gif/ALdefaultProjectSettings_1.gif)
-
 
 ## 📕Commands
 
@@ -25,6 +23,7 @@ Feel free to support me here:
 - `MC: Toggle AppSourceCop - activate or deactivate the AppSourceCop`
 - `MC: Add Workspace Settings - insert settings into workspace file`
 - `MC: Add Cloud Launch Settings - Adds a configuration for the SaaS environment to the launch.json`
+- `MC: Create Permission Set - Inserts the permission sets based on the Business Central Foundation app`
 
 ## 🤝 Contributing
 

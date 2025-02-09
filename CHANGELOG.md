@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.2.11]
+
+- Added new command - MC: Create Permission Set
+- Code style adjustments 😎
+- readme update
+
 ## [0.2.0]
 
 - Adding the workspace settings
