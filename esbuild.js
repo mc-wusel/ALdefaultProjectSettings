@@ -9,17 +9,17 @@ async function main() {
     bundle: true,
     format: 'cjs',
     minify: production,
-    sourcemap: !production,
-    sourcesContent: false,
+    sourcemap: true,
+    sourcesContent: true,
     platform: 'node',
-    outfile: 'dist/extension.js',
+    outfile: 'out/extension.js',
     external: ['vscode'],
     logLevel: 'silent',
     plugins: [
-      /* add to the end of plugins array */
       esbuildProblemMatcherPlugin
     ]
   });
+
   if (watch) {
     await ctx.watch();
   } else {
