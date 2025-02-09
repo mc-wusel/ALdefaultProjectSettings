@@ -1,15 +1,98 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-
 import * as settingsMgt from './settingsMgt';
 
 const settingsFileName = 'settings.json';
 const launchFileName = 'launch.json';
 const dirName = '.vscode';
 
+/**
+ * Enum for AL objects
+ */
+enum ALObjects {
+    Codeunit,
+    Page,
+    Table,
+    Report,
+    Query,
+    XMLPort,
+    MenuSuite
+}
+
+/**
+ * Categorize the files based on the object type
+ * @param fileName 
+ * @returns 
+ */
+function categorizeFiles(fileName: string): ALObjects | null {
+    const lowerCaseFileName = fileName.toLowerCase();
+    if (lowerCaseFileName.includes('.codeunit.')) {
+        return ALObjects.Codeunit;
+    } else if (lowerCaseFileName.includes('.page.')) {
+        return ALObjects.Page;
+    } else if (lowerCaseFileName.includes('.table.')) {
+        return ALObjects.Table;
+    } else if (lowerCaseFileName.includes('.report.')) {
+        return ALObjects.Report;
+    } else if (lowerCaseFileName.includes('.query.')) {
+        return ALObjects.Query;
+    } else if (lowerCaseFileName.includes('.xmlPort.')) {
+        return ALObjects.XMLPort;
+    } else if (lowerCaseFileName.includes('.menuSuite.')) {
+        return ALObjects.MenuSuite;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Get all the AL files in the directory
+ * @param dir 
+ * @returns list of AL files
+ */
+async function getAlFiles(dir: string): Promise<string[]> {
+    let results: string[] = [];
+    try {
+        const list = await fs.promises.readdir(dir, { withFileTypes: true });
+        for (const file of list) {
+            const filePath = path.join(dir, file.name);
+            if (file.isDirectory()) {
+                console.log(`📂 Enter directory: ${filePath}`);
+                results = results.concat(await getAlFiles(filePath));
+            } else if (file.name.endsWith('.al')) {
+                results.push(filePath);
+            }
+        }
+    } catch (err) {
+        console.error(`❌ Error reading the directory ${dir}:`, err);
+    }
+    return results;
+}
+
+/**
+ * Extract the object name from the AL file
+ * @param content 
+ * @returns extracted object name or null
+ */
+function extractObjectName(content: string): string | null {
+    const regex = /\b(?:table|page|report|codeunit|query|xmlport|tableextension|pageextension|reportextension|enum)\s+\d+\s+"?([A-Za-z_][A-Za-z0-9_.\- ]*)"?\s*(?:extends\s+"?[A-Za-z_][A-Za-z0-9_.\- ]*"?\s*)?/;
+    const match = content.match(regex);
+
+    if (match) {
+        let objectName = match[1];
+        if (objectName.includes(' ')) {
+            objectName = `"${objectName}"`;
+        }
+        return objectName;
+    }
+    return null;
+}
+
+/**
+ * Create the permission set
+ */
 async function createPermissionSet() {
-    // frage nach dem Namen des Permission Sets
     const permissionSetName = await vscode.window.showInputBox({
         prompt: 'Please enter the name of the Permission Set.'
     });
@@ -18,16 +101,99 @@ async function createPermissionSet() {
         vscode.window.showInformationMessage('Permission Set was not created.');
         return;
     }
-
-    // im aktuellen arbeisverzeichnis
     if (vscode.workspace.workspaceFolders) {
-
+        const funcStartTime = globalThis.Date.now();
         const directory = vscode.workspace.workspaceFolders[0];
-        const permissionSetDirectory = path.join(directory.uri.fsPath, 'PermissionSets');
+        const permissionSetDirectory = path.join(directory.uri.fsPath, 'Permissions');
         const permissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Admin.permissionset.al`);
         const editPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Edit.permissionset.al`);
         const readPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Read.permissionset.al`);
         const objectsPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Objects.permissionset.al`);
+
+        // get all the AL files and log the time
+        const startTime = globalThis.Date.now();
+        const alFile = await getAlFiles(directory.uri.fsPath);
+        const endTime = globalThis.Date.now();
+        console.log(`🕒 Reading directories elapsed time: ${endTime - startTime}ms`);
+
+        // categorize the files
+        const categorized = {
+            [ALObjects.Codeunit]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.Codeunit),
+            [ALObjects.Page]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.Page),
+            [ALObjects.Table]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.Table),
+            [ALObjects.Report]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.Report),
+            [ALObjects.Query]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.Query),
+            [ALObjects.XMLPort]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.XMLPort),
+            [ALObjects.MenuSuite]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.MenuSuite)
+        }
+
+        let objectPermissions = '';
+        let tableDataRead = '';
+        let tableDataEdit = '';
+        let firstEntry = true;
+        let firstTableEntry = true;
+
+        switch (true) {
+            case categorized[ALObjects.Codeunit].length === 0:
+                console.log(`🚫 No Codeunits found!`);
+            case categorized[ALObjects.Page].length === 0:
+                console.log(`🚫 No Pages found!`);
+            case categorized[ALObjects.Table].length === 0:
+                console.log(`🚫 No Tables found!`);
+            case categorized[ALObjects.Report].length === 0:
+                console.log(`🚫 No Reports found!`);
+            case categorized[ALObjects.Query].length === 0:
+                console.log(`🚫 No Queries found!`);
+            case categorized[ALObjects.XMLPort].length === 0:
+                console.log(`🚫 No XMLPorts found!`);
+            case categorized[ALObjects.MenuSuite].length === 0:
+                console.log(`🚫 No MenuSuites found!`)
+        }
+
+        for (const [key, files] of Object.entries(categorized)) {
+            if (files.length === 0) {
+                console.log(`🚫 No ${ALObjects[key as keyof typeof ALObjects]} found!`);
+                continue;
+            }
+            console.log(`📝 ${ALObjects[key as keyof typeof ALObjects]} files:`);
+            for (const file of files) {
+                try {
+                    const content = await fs.promises.readFile(file, 'utf8');
+                    const objectName = extractObjectName(content);
+                    if (objectName) {
+                        console.log(`\t📄 Object Name: ${objectName}`);
+
+                        const objectType = ALObjects[key as keyof typeof ALObjects];
+                        const objectTypeValue = ALObjects[objectType as unknown as keyof typeof ALObjects];
+
+                        switch (objectTypeValue) {
+                            case ALObjects.Table:
+                                if (firstTableEntry) {
+                                    tableDataRead += `\t\tTabledata ${objectName} = R`;
+                                    tableDataEdit += `\t\tTabledata ${objectName} = IMD`;
+                                    firstTableEntry = false;
+                                } else {
+                                    tableDataRead += `,\n\t\tTabledata ${objectName} = R`;
+                                    tableDataEdit += `,\n\t\tTabledata ${objectName} = IMD`;
+                                }
+                                break;
+                            default:
+                                if (firstEntry) {
+                                    objectPermissions += `\t\t${objectType} ${objectName} = X`;
+                                    firstEntry = false;
+                                } else {
+                                    objectPermissions += `,\n\t\t${objectType} ${objectName} = X`;
+                                }
+                                break;
+                        }
+                    } else {
+                        console.log(`No object name found in file: ${file}`);
+                    }
+                } catch (err) {
+                    console.error(`❌ Error reading file ${file}:`, err);
+                }
+            }
+        }
 
         if (!fs.existsSync(permissionSetDirectory)) {
             fs.mkdirSync(permissionSetDirectory);
@@ -38,11 +204,12 @@ async function createPermissionSet() {
             return;
         }
 
-        // erstelle die Dateien
+
         fs.writeFileSync(permissionSetPath, `
 namespace App.App;
 
-permissionset 5000 "${permissionSetName} Admin" {
+permissionset 50000 "${permissionSetName} Admin" 
+{
 \tAccess = Public;
 \tAssignable = true;
 
@@ -54,44 +221,53 @@ permissionset 5000 "${permissionSetName} Admin" {
         fs.writeFileSync(editPermissionSetPath, `
 namespace App.App;
 
-permissionset 5001 "${permissionSetName} - Edit" {
+permissionset 50001 "${permissionSetName} - Edit" 
+{
 \tAccess = Internal;
 \tAssignable = false;
 
 \tIncludedPermissionSets = "${permissionSetName} - Read";
 
-\tPermissions = ;
+\tPermissions = 
+${tableDataEdit};
 }`);
 
         fs.writeFileSync(readPermissionSetPath, `
 namespace App.App;
 
-permissionset 5002 "${permissionSetName} - Read" {
+permissionset 50002 "${permissionSetName} - Read" 
+{
 \tAccess = Internal;
 \tAssignable = false;
 
 \tIncludedPermissionSets = "${permissionSetName} - Objects";
 
-\tPermissions = ;
+\tPermissions = 
+${tableDataRead};
 }`);
+
 
         fs.writeFileSync(objectsPermissionSetPath, `
 namespace App.App;
 
-permissionset 5003 "${permissionSetName} - Objects" {
+permissionset 50003 "${permissionSetName} - Objects" 
+{
 
 \tAccess = Internal;
 \tAssignable = false;
 
-\tPermissions = ;
+\tPermissions = 
+${objectPermissions};
 }`);
 
+        const funcEndTime = globalThis.Date.now();
+        console.log(`🕒 Function execution time: ${funcEndTime - funcStartTime}ms`);
         vscode.window.showInformationMessage('Permission Set has been created.');
     }
 }
 
 /**
- * 
+ * Set the location of the sidebar
  * @param location 
  */
 async function handleSidebarLocation(context: vscode.ExtensionContext, location: string) {
@@ -264,6 +440,10 @@ function getDefaultSettings(alPrefix: string | undefined) {
     };
 }
 
+/**
+ * Add the cloud launch settings
+ * @returns 
+ */
 async function addCloudLaunchSettings() {
     if (vscode.workspace.workspaceFolders) {
 
