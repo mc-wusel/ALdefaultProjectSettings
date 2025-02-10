@@ -76,6 +76,9 @@ async function getAlFiles(dir: string): Promise<string[]> {
  * @returns extracted object name or null
  */
 function extractObjectName(content: string): string | null {
+    const implementsRegex = /\s*implements\s+[A-Za-z_][A-Za-z0-9_]*\s*/g;
+    content = content.replace(implementsRegex, "");
+
     const regex = /\b(?:table|page|report|codeunit|query|xmlport|tableextension|pageextension|reportextension|enum)\s+\d+\s+"?([A-Za-z_][A-Za-z0-9_.\- ]*)"?\s*(?:extends\s+"?[A-Za-z_][A-Za-z0-9_.\- ]*"?\s*)?/;
     const match = content.match(regex);
 
@@ -85,6 +88,20 @@ function extractObjectName(content: string): string | null {
             objectName = `"${objectName}"`;
         }
         return objectName;
+    }
+    return null;
+}
+
+/**
+ * Extract the namespace from the AL file
+ * @param content 
+ * @returns extracted namespace or null
+ */
+function extractNamespace(content: string): string | null {
+    const regex = /namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*;/;
+    const match = content.match(regex);
+    if (match) {
+        return match[1];
     }
     return null;
 }
@@ -127,28 +144,20 @@ async function createPermissionSet() {
             [ALObjects.MenuSuite]: alFile.filter(file => categorizeFiles(path.basename(file)) === ALObjects.MenuSuite)
         }
 
+        let namespace = '';
         let objectPermissions = '';
+        let tables = '';
         let tableDataRead = '';
         let tableDataEdit = '';
         let firstEntry = true;
         let firstTableEntry = true;
 
-        switch (true) {
-            case categorized[ALObjects.Codeunit].length === 0:
-                console.log(`🚫 No Codeunits found!`);
-            case categorized[ALObjects.Page].length === 0:
-                console.log(`🚫 No Pages found!`);
-            case categorized[ALObjects.Table].length === 0:
-                console.log(`🚫 No Tables found!`);
-            case categorized[ALObjects.Report].length === 0:
-                console.log(`🚫 No Reports found!`);
-            case categorized[ALObjects.Query].length === 0:
-                console.log(`🚫 No Queries found!`);
-            case categorized[ALObjects.XMLPort].length === 0:
-                console.log(`🚫 No XMLPorts found!`);
-            case categorized[ALObjects.MenuSuite].length === 0:
-                console.log(`🚫 No MenuSuites found!`)
-        }
+        Object.keys(ALObjects).forEach(key => {
+            const obj = ALObjects[key as keyof typeof ALObjects];
+            if (categorized[obj]?.length === 0) {
+                console.log(`🚫 No ${key} found!`);
+            }
+        });
 
         for (const [key, files] of Object.entries(categorized)) {
             if (files.length === 0) {
@@ -159,6 +168,12 @@ async function createPermissionSet() {
             for (const file of files) {
                 try {
                     const content = await fs.promises.readFile(file, 'utf8');
+                    // Extract namespace once
+                    if (!namespace) {
+                        namespace = extractNamespace(content) || 'app.app';
+                        console.log(`Namespace: ${namespace}`);
+                    }
+
                     const objectName = extractObjectName(content);
                     if (objectName) {
                         console.log(`\t📄 Object Name: ${objectName}`);
@@ -169,10 +184,12 @@ async function createPermissionSet() {
                         switch (objectTypeValue) {
                             case ALObjects.Table:
                                 if (firstTableEntry) {
+                                    tables += `\t\t${objectType} ${objectName} = X`;
                                     tableDataRead += `\t\tTabledata ${objectName} = R`;
                                     tableDataEdit += `\t\tTabledata ${objectName} = IMD`;
                                     firstTableEntry = false;
                                 } else {
+                                    tables += `,\n\t\t${objectType} ${objectName} = X`;
                                     tableDataRead += `,\n\t\tTabledata ${objectName} = R`;
                                     tableDataEdit += `,\n\t\tTabledata ${objectName} = IMD`;
                                 }
@@ -195,6 +212,10 @@ async function createPermissionSet() {
             }
         }
 
+        if (tables) {
+            objectPermissions += `,\n${tables}`;
+        }
+
         if (!fs.existsSync(permissionSetDirectory)) {
             fs.mkdirSync(permissionSetDirectory);
         }
@@ -206,7 +227,7 @@ async function createPermissionSet() {
 
 
         fs.writeFileSync(permissionSetPath, `
-namespace App.App;
+namespace ${namespace};
 
 permissionset 50000 "${permissionSetName} Admin" 
 {
@@ -219,7 +240,7 @@ permissionset 50000 "${permissionSetName} Admin"
 }`);
 
         fs.writeFileSync(editPermissionSetPath, `
-namespace App.App;
+namespace ${namespace};
 
 permissionset 50001 "${permissionSetName} - Edit" 
 {
@@ -233,7 +254,7 @@ ${tableDataEdit};
 }`);
 
         fs.writeFileSync(readPermissionSetPath, `
-namespace App.App;
+namespace ${namespace};
 
 permissionset 50002 "${permissionSetName} - Read" 
 {
@@ -248,7 +269,7 @@ ${tableDataRead};
 
 
         fs.writeFileSync(objectsPermissionSetPath, `
-namespace App.App;
+namespace ${namespace};
 
 permissionset 50003 "${permissionSetName} - Objects" 
 {

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.12]
+
+- Added Namespace on Permission Sets
+- Fixed names for codeunit objects when they contain implementations
+
 ## [0.2.11]
 
 - Added new command - MC: Create Permission Set
