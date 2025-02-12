@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.13]
+
+- objects sorted by name
+- id range of the app is used for the permissions
+
 ## [0.2.12]
 
 - Added Namespace on Permission Sets
