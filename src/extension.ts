@@ -21,6 +21,39 @@ enum ALObjects {
 }
 
 /**
+ * Get the ID ranges from the app.json file
+ * @param Path
+ * @returns ID ranges
+ */
+async function getIdRange(Path: string) {
+    try {
+        const data = await fs.promises.readFile(Path, 'utf8');
+        const appJson = JSON.parse(data);
+
+        if (!appJson.idRanges || !Array.isArray(appJson.idRanges)) {
+            vscode.window.showErrorMessage('Error: idRanges is missing or not an array.');
+            console.log(`🚫 idRanges is missing or not an array.`);
+            return null;
+        }
+
+        const idRange = appJson.idRanges.map((range: { from: number; to: number }) => [range.from, range.to]);
+
+        console.log('📌 Extracted ID Ranges:', idRange);
+        return idRange;
+
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            vscode.window.showErrorMessage(`Error processing the app.json file: ${error.message}`);
+            console.log(`❌ JSON Parse Error: ${error.message}`);
+        } else {
+            vscode.window.showErrorMessage('An unknown error occurred while parsing app.json.');
+            console.log(`❌ Unknown Error:`, error);
+        }
+        return null;
+    }
+}
+
+/**
  * Categorize the files based on the object type
  * @param fileName 
  * @returns 
@@ -127,11 +160,16 @@ async function createPermissionSet() {
         const readPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Read.permissionset.al`);
         const objectsPermissionSetPath = path.join(permissionSetDirectory, `${permissionSetName}Objects.permissionset.al`);
 
+        const appJsonPath = path.join(directory.uri.fsPath, 'app.json');
+
         // get all the AL files and log the time
         const startTime = globalThis.Date.now();
         const alFile = await getAlFiles(directory.uri.fsPath);
         const endTime = globalThis.Date.now();
         console.log(`🕒 Reading directories elapsed time: ${endTime - startTime}ms`);
+
+        const idRange = await getIdRange(appJsonPath);
+        vscode.window.showInformationMessage(`ID Range: ${idRange}`);
 
         // categorize the files
         const categorized = {
@@ -149,8 +187,10 @@ async function createPermissionSet() {
         let tables = '';
         let tableDataRead = '';
         let tableDataEdit = '';
-        let firstEntry = true;
-        let firstTableEntry = true;
+        let objectPermissionCollection: string[] = [];
+        let tablesCollection: string[] = [];
+        let tableDataReadCollection: string[] = [];
+        let tableDataEditCollection: string[] = [];
 
         Object.keys(ALObjects).forEach(key => {
             const obj = ALObjects[key as keyof typeof ALObjects];
@@ -183,24 +223,12 @@ async function createPermissionSet() {
 
                         switch (objectTypeValue) {
                             case ALObjects.Table:
-                                if (firstTableEntry) {
-                                    tables += `\t\t${objectType} ${objectName} = X`;
-                                    tableDataRead += `\t\tTabledata ${objectName} = R`;
-                                    tableDataEdit += `\t\tTabledata ${objectName} = IMD`;
-                                    firstTableEntry = false;
-                                } else {
-                                    tables += `,\n\t\t${objectType} ${objectName} = X`;
-                                    tableDataRead += `,\n\t\tTabledata ${objectName} = R`;
-                                    tableDataEdit += `,\n\t\tTabledata ${objectName} = IMD`;
-                                }
+                                tablesCollection.push(`\t\t${objectType} ${objectName} = X`);
+                                tableDataReadCollection.push(`\t\tTabledata ${objectName} = R`);
+                                tableDataEditCollection.push(`\t\tTabledata ${objectName} = IMD`);
                                 break;
                             default:
-                                if (firstEntry) {
-                                    objectPermissions += `\t\t${objectType} ${objectName} = X`;
-                                    firstEntry = false;
-                                } else {
-                                    objectPermissions += `,\n\t\t${objectType} ${objectName} = X`;
-                                }
+                                objectPermissionCollection.push(`\t\t${objectType} ${objectName} = X`);
                                 break;
                         }
                     } else {
@@ -211,6 +239,18 @@ async function createPermissionSet() {
                 }
             }
         }
+
+        // Sort
+        objectPermissionCollection.sort();
+        tablesCollection.sort();
+        tableDataReadCollection.sort();
+        tableDataEditCollection.sort();
+
+        // sorted collections
+        objectPermissions = objectPermissionCollection.join(',\n');
+        tables = tablesCollection.join(',\n');
+        tableDataRead = tableDataReadCollection.join(',\n');
+        tableDataEdit = tableDataEditCollection.join(',\n');
 
         if (tables) {
             objectPermissions += `,\n${tables}`;
@@ -225,11 +265,12 @@ async function createPermissionSet() {
             return;
         }
 
+        if (idRange && idRange.length > 0) {
+            let currentID = Math.min(...idRange.flat());
 
-        fs.writeFileSync(permissionSetPath, `
-namespace ${namespace};
-
-permissionset 50000 "${permissionSetName} Admin" 
+            fs.writeFileSync(permissionSetPath, `namespace ${namespace};
+                
+permissionset ${currentID++} "${permissionSetName} Admin" 
 {
 \tAccess = Public;
 \tAssignable = true;
@@ -239,10 +280,10 @@ permissionset 50000 "${permissionSetName} Admin"
 \tIncludedPermissionSets = "${permissionSetName} - Edit";
 }`);
 
-        fs.writeFileSync(editPermissionSetPath, `
+            fs.writeFileSync(editPermissionSetPath, `
 namespace ${namespace};
 
-permissionset 50001 "${permissionSetName} - Edit" 
+permissionset ${currentID++} "${permissionSetName} - Edit" 
 {
 \tAccess = Internal;
 \tAssignable = false;
@@ -253,10 +294,9 @@ permissionset 50001 "${permissionSetName} - Edit"
 ${tableDataEdit};
 }`);
 
-        fs.writeFileSync(readPermissionSetPath, `
-namespace ${namespace};
+            fs.writeFileSync(readPermissionSetPath, `namespace ${namespace};
 
-permissionset 50002 "${permissionSetName} - Read" 
+permissionset ${currentID++} "${permissionSetName} - Read" 
 {
 \tAccess = Internal;
 \tAssignable = false;
@@ -268,10 +308,9 @@ ${tableDataRead};
 }`);
 
 
-        fs.writeFileSync(objectsPermissionSetPath, `
-namespace ${namespace};
+            fs.writeFileSync(objectsPermissionSetPath, `namespace ${namespace};
 
-permissionset 50003 "${permissionSetName} - Objects" 
+permissionset ${currentID++} "${permissionSetName} - Objects" 
 {
 
 \tAccess = Internal;
@@ -280,6 +319,7 @@ permissionset 50003 "${permissionSetName} - Objects"
 \tPermissions = 
 ${objectPermissions};
 }`);
+        }
 
         const funcEndTime = globalThis.Date.now();
         console.log(`🕒 Function execution time: ${funcEndTime - funcStartTime}ms`);
