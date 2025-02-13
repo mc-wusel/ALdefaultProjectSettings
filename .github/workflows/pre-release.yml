@@ -2,15 +2,20 @@ name: Pre-Release Pipeline
 
 on:
   pull_request:
+    branches:
+      - main
     types:
+      - opened
+      - synchronize
+      - reopened
       - closed
 
 permissions:
   contents: read
 
 jobs:
-  pre-release:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+  Create Pre-Release:
+    if: github.event.pull_request.merged == true || github.event.action == 'opened' || github.event.action == 'synchronize'
     runs-on: ubuntu-latest
 
     steps:
@@ -25,5 +30,6 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Compile TypeScript
-        run: npx tsc -p ./
+      - name: Compile TypeScript with Webpack
+        run: |
+          npx webpack --mode production
