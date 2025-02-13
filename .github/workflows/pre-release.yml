@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  Create Pre-Release:
+  Create_Pre-Release:
     if: github.event.pull_request.merged == true || github.event.action == 'opened' || github.event.action == 'synchronize'
     runs-on: ubuntu-latest
 

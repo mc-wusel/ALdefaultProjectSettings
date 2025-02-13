@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  Create Release:
+  Create_Release:
     runs-on: ubuntu-latest
 
     steps:
