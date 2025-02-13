@@ -7,65 +7,57 @@ permissions:
   contents: write
 
 jobs:
- Release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js and Install Dependencies
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install Dependencies
-        run: |
-          npm install
+        run: npm install
 
-      # Step 3: Compile TypeScript
-      - name: Compile TypeScript
+      - name: Compile TypeScript with Webpack
         run: |
-          npx tsc -p ./
-
-      # Step 4: Bump Version
-      - name: Read Current Version
-        id: read_version
-        run: |
-          if [ -f package.json ]; then
-            current_version=$(node -p "require('./package.json').version")
-          else
-            echo "0.0.0" > VERSION
-            current_version="0.0.0"
-          fi
-          echo "Current version: $current_version"
-          echo "current_version=$current_version" >> $GITHUB_ENV
+          npx webpack --mode production
 
       - name: Bump Version
         id: bump_version
         run: |
+          current_version=$(node -p "require('./package.json').version")
           IFS='.' read -r major minor patch <<< "$current_version"
           patch=$((patch + 1))
           new_version="$major.$minor.$patch"
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_ENV
 
-          # Update the version in package.json
           jq ".version = \"$new_version\"" package.json > package.tmp.json
           mv package.tmp.json package.json
 
-      # Step 5: Commit Version Bump and Push Changes
-      - name: Commit Version Bump
+      - name: Generate Changelog
+        run: |
+          changelog="CHANGELOG.md"
+          new_entry="## [${{ env.new_version }}]\n"
+          new_commits=$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 @^)..@)
+
+          echo -e "# Change Log\n\n$new_entry\n$new_commits\n\n$(cat $changelog)" > $changelog
+
+          echo "Generated Changelog:"
+          cat $changelog
+
+      - name: Commit Version Bump & Changelog
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "Bump version to ${{ env.new_version }}"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
+          git add package.json CHANGELOG.md
+          git commit -m "Bump version to ${{ env.new_version }} and update Changelog"
+          git push
 
-      # Step 6: Create Release
       - name: Create Release
         uses: actions/create-release@v1
         with:
@@ -76,7 +68,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 7: Cleanup - Package and Publish Extension
       - name: Package and Publish Extension
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
