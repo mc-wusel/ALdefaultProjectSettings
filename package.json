@@ -101,7 +101,7 @@
     "watch:webpack": "webpack --watch",
     "vscode:prepublish": "npm run package",
     "package": "npm run check-types && npm run build",
-    "build": "webpack"
+    "build": "tsc"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
