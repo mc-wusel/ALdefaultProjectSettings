@@ -20,6 +20,63 @@ enum ALObjects {
     MenuSuite
 }
 
+async function sortNamespace() {
+    const editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+        vscode.window.showWarningMessage('No active editor found.');
+        return;
+    }
+
+    const document = editor.document;
+    const uri = document.uri;
+
+    try {
+        let content = document.getText();
+
+        const namespaceRegex = /^namespace\s+([\w\.]+);/m;
+        const namespaceMatch = content.match(namespaceRegex);
+        let namespaceDeclaration = namespaceMatch ? namespaceMatch[0] : '';
+
+        const regex = /^using\s+([^;]+);/gm;
+        let match;
+        let usings: string[] = [];
+
+        while ((match = regex.exec(content)) !== null) {
+            usings.push(match[0]);
+        }
+
+        if (usings.length === 0) {
+            vscode.window.showWarningMessage('No using statements found.');
+            return;
+        }
+
+        // time to sort the usings
+        usings = Array.from(new Set(usings)).sort();
+        content = content.replace(regex, '').trim();
+        content = content.replace(namespaceRegex, '').trim();
+        //content = `${usings.join('\n')}\n\n${content}`;
+        content = `${namespaceDeclaration}\n\n${usings.join('\n')}\n\n${content}`;
+
+        // write the content back to the editor
+        const edit = new vscode.WorkspaceEdit();
+        const fullRange = new vscode.Range(
+            document.lineAt(0).range.start,
+            document.lineAt(document.lineCount - 1).range.end
+        );
+
+        edit.replace(uri, fullRange, content);
+        await vscode.workspace.applyEdit(edit);
+
+    } catch (err) {
+        if (err instanceof Error) {
+            vscode.window.showErrorMessage(`Error: ${err.message}`);
+        } else {
+            vscode.window.showErrorMessage('An unknown error occurred.');
+        }
+    }
+}
+
 /**
  * Get the ID ranges from the app.json file
  * @param Path
@@ -577,6 +634,15 @@ async function addCloudLaunchSettings() {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+    // sort Business Central namespaces on save
+    vscode.workspace.onDidSaveTextDocument(() => {
+        const config = vscode.workspace.getConfiguration('mc');
+        const enable = config.get('sortNamespace');
+        if (enable) {
+            sortNamespace();
+        }
+    });
+
     registerCMD(context, 'mc.go', async () => {
         if (vscode.workspace.workspaceFolders) {
 
