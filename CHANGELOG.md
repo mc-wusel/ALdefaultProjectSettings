@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.14]
+
+- When saving the file, the namespace is written sorted into the file
+
 ## [0.2.13]
 
 - objects sorted by name
