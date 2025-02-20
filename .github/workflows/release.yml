@@ -23,12 +23,12 @@ jobs:
         run: npm install
 
       - name: Compile TypeScript
-        run: |
-          npm run package
+        run: npm run package
 
       - name: Bump Version
         id: bump_version
         run: |
+          # Hole die aktuelle Version aus package.json
           current_version=$(node -p "require('./package.json').version")
           IFS='.' read -r major minor patch <<< "$current_version"
           patch=$((patch + 1))
@@ -36,16 +36,30 @@ jobs:
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_ENV
 
+          # Aktualisiere die Version in package.json
           jq ".version = \"$new_version\"" package.json > package.tmp.json
           mv package.tmp.json package.json
 
       - name: Generate Changelog
         run: |
           changelog="CHANGELOG.md"
-          new_entry="## [${{ env.new_version }}]\n"
-          new_commits=$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 @^)..@)
 
-          echo -e "# Change Log\n\n$new_entry\n$new_commits\n\n$(cat $changelog)" > $changelog
+          previous_tag=$(git tag --sort=-v:refname | head -n 1)
+          if [ -z "$previous_tag" ]; then
+            echo "Keine vorherigen Tags gefunden. Alle Commits werden erfasst."
+            new_commits=$(git log --pretty=format:"- %s")
+          else
+            echo "Letztes Tag: $previous_tag"
+            new_commits=$(git log --pretty=format:"- %s" $previous_tag..HEAD)
+          fi
+
+          new_entry="## [${{ env.new_version }}]"
+
+          if [ -f "$changelog" ]; then
+            echo -e "$new_entry\n$new_commits\n\n$(cat $changelog)" > $changelog
+          else
+            echo -e "# Change Log\n\n$new_entry\n$new_commits" > $changelog
+          fi
 
           echo "Generated Changelog:"
           cat $changelog
