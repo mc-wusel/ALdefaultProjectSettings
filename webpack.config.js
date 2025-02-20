@@ -22,7 +22,7 @@ module.exports = {
     path: 'commonjs path',
   },
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+  filename: 'extension.js',
+  path: path.resolve(__dirname, 'out'),
   },
 };
