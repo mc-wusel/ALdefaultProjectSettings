@@ -20,6 +20,28 @@ enum ALObjects {
     MenuSuite
 }
 
+/**
+ * Compare two "using x.y;" statements by namespace segments, so that a parent
+ * namespace (e.g. "Order") always sorts before its children (e.g. "Order.Archive").
+ * A plain string sort fails here because '.' (0x2E) sorts before ';' (0x3B).
+ * @param a
+ * @param b
+ */
+function compareUsingStatements(a: string, b: string): number {
+    const toSegments = (statement: string) => statement.replace(/^using\s+/, '').replace(/;$/, '').split('.');
+    const segmentsA = toSegments(a);
+    const segmentsB = toSegments(b);
+    const length = Math.min(segmentsA.length, segmentsB.length);
+
+    for (let i = 0; i < length; i++) {
+        const comparison = segmentsA[i].localeCompare(segmentsB[i]);
+        if (comparison !== 0) {
+            return comparison;
+        }
+    }
+    return segmentsA.length - segmentsB.length;
+}
+
 async function sortNamespace() {
     const editor = vscode.window.activeTextEditor;
 
@@ -55,7 +77,7 @@ async function sortNamespace() {
             }
 
             // time to sort the usings
-            usings = Array.from(new Set(usings)).sort();
+            usings = Array.from(new Set(usings)).sort(compareUsingStatements);
             content = content.replace(regex, '').trim();
             content = content.replace(namespaceRegex, '').trim();
             //content = `${usings.join('\n')}\n\n${content}`;
