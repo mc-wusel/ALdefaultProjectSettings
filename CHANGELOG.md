@@ -1,3 +1,6 @@
+## [0.2.18]
+- Implement sorting for "using x.y;" statements by namespace segments
+
 # Change Log
 
 ## [0.2.17]
